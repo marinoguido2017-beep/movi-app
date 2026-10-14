@@ -97,14 +97,14 @@ if(['divertimento','tensione','emozione','relax'].includes(inviteMood)){document
 
 
 const voteIds=[0,2,3,5,6];
-let voteOwn={},voteRemote=null;
+let voteOwn={},voteRemote=null;try{voteOwn=JSON.parse(localStorage.getItem('movi-together-votes')||'{}')}catch(e){}
 function voteRender(){
  const root=document.getElementById('voteMovies');
  root.innerHTML=voteIds.map(id=>{const f=films[id];return '<div class="catalogentry"><strong>'+f.title+'</strong><p class="detail">'+f.year+' · '+f.duration+' min</p><button type="button" class="smallbtn" data-vote="'+id+'" data-value="yes" '+(voteOwn[id]==='yes'?'style="background:#7757ad"':'')+'>👍 Lo guarderei</button><button type="button" class="smallbtn" data-vote="'+id+'" data-value="no" '+(voteOwn[id]==='no'?'style="background:#7757ad"':'')+'>👎 Non mi interessa</button></div>'}).join('');
  const yes=voteIds.filter(id=>voteOwn[id]==='yes'&&voteRemote?.[id]==='yes');
  if(voteRemote)document.getElementById('voteResponse').innerHTML='<div class="step">Risultato condiviso</div>'+(yes.length?yes.map(id=>'<div class="card">♥ <strong>'+films[id].title+'</strong><p class="detail">Piace a entrambi</p></div>').join(''):'<p class="detail">Ancora nessuna scelta in comune tra i voti positivi.</p>');
 }
-document.getElementById('voteMovies').addEventListener('click',e=>{const b=e.target.closest('[data-vote]');if(!b)return;voteOwn[b.dataset.vote]=b.dataset.value;voteRender()});
+document.getElementById('voteMovies').addEventListener('click',e=>{const b=e.target.closest('[data-vote]');if(!b)return;voteOwn[b.dataset.vote]=b.dataset.value;localStorage.setItem('movi-together-votes',JSON.stringify(voteOwn));voteRender()});
 function encodeVotes(v){return voteIds.map(id=>v[id]==='yes'?'1':v[id]==='no'?'0':'-').join('')}
 function decodeVotes(v){if(!/^[01-]{5}$/.test(v||''))return null;return Object.fromEntries(voteIds.map((id,i)=>[id,v[i]==='1'?'yes':v[i]==='0'?'no':null]))}
 async function shareVoteLink(){
