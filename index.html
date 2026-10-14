@@ -6,7 +6,7 @@
 <nav class="nav"><button class="active" data-tab="discover">✨ Scopri</button><button data-tab="couple">♡ Coppia</button><button data-tab="saved">☆ Salvati</button><button data-tab="catalog">⌕ Catalogo</button></nav>
 <section id="discover"><h1>La serata giusta.<br><span style="color:#b98dff">Senza cercare.</span></h1><p class="muted">Dimmi come ti senti. MOVI sceglie 3 titoli per te, senza scorrere all'infinito.</p><div class="step">1 · Che atmosfera cerchi?</div><div class="choices" id="moods"></div><div class="step">2 · Cosa guardi?</div><div class="choices" id="types"></div><div class="step">3 · Quanto tempo hai?</div><div class="choices" id="times"></div><button class="primary" id="choose">✨ Scegli per me</button><div id="results"></div></section>
 <section id="couple" class="hide"><h1>Due gusti.<br><span style="color:#b98dff">Una serata.</span></h1><p class="muted">Selezionate separatamente l'atmosfera che desiderate: MOVI trova un compromesso.</p><div class="step">Persona 1</div><div class="choices" id="mood1"></div><div class="step">Persona 2</div><div class="choices" id="mood2"></div><button class="primary" id="match">♡ Trova il match</button><div id="coupleresults"></div></section>
-<section id="catalog" class="hide"><h1>Il cinema.<br><span style="color:#b98dff">Da esplorare.</span></h1><p class="muted">Cerca titoli reali nel catalogo aperto Wikidata. Questa è la prima integrazione online di MOVI.</p><form id="catalogform" style="display:flex;gap:8px"><input id="catalogquery" autocomplete="off" minlength="2" maxlength="70" placeholder="Cerca film, serie o programmi…" aria-label="Cerca titolo" required><button class="smallbtn" style="margin:0" type="submit">Cerca</button></form><div id="catalogresults" aria-live="polite" style="margin-top:18px"></div><div id="catalogdetail" class="hide" aria-live="polite"></div><p class="muted" style="font-size:12px">Informazioni provenienti da Wikidata (CC0). Schede in italiano e video quando presenti nelle fonti. I trailer non sono disponibili per tutti i titoli. Non indica dove guardare i contenuti.</p></section><section id="saved" class="hide"><h1>La tua lista ☆</h1><p class="muted">I titoli che hai salvato su questo dispositivo.</p><div id="savedresults"></div></section><p class="muted" style="font-size:12px;margin-top:45px">I suggerimenti automatici usano ancora un catalogo locale dimostrativo; la ricerca Catalogo consulta Wikidata online. Nessuna disponibilità streaming in tempo reale. Nessun film viene riprodotto qui.</p></main>
+<section id="catalog" class="hide"><h1>Il cinema.<br><span style="color:#b98dff">Da esplorare.</span></h1><p class="muted">Cerca titoli reali nel catalogo aperto Wikidata. Questa è la prima integrazione online di MOVI.</p><form id="catalogform" style="display:flex;gap:8px"><input id="catalogquery" autocomplete="off" minlength="2" maxlength="70" placeholder="Cerca film, serie o programmi…" aria-label="Cerca titolo" required><button class="smallbtn" style="margin:0" type="submit">Cerca</button></form><div id="catalogresults" aria-live="polite" style="margin-top:18px"></div><button id="catalogmore" class="primary hide" type="button">Mostra altri risultati</button><div id="catalogdetail" class="hide" aria-live="polite"></div><p class="muted" style="font-size:12px">Informazioni provenienti da Wikidata (CC0). Schede in italiano e video quando presenti nelle fonti. I trailer non sono disponibili per tutti i titoli. Non indica dove guardare i contenuti.</p></section><section id="saved" class="hide"><h1>La tua lista ☆</h1><p class="muted">I titoli che hai salvato su questo dispositivo.</p><div id="savedresults"></div></section><p class="muted" style="font-size:12px;margin-top:45px">I suggerimenti automatici usano ancora un catalogo locale dimostrativo; la ricerca Catalogo consulta Wikidata online. Nessuna disponibilità streaming in tempo reale. Nessun film viene riprodotto qui.</p></main>
 <script>
 const films=[
 ['The Truman Show','film',103,['emozione','relax'],1998,'Una storia brillante che fa riflettere.','🎬'],
@@ -118,24 +118,37 @@ async function openRecommendedDetail(id){
  view.scrollIntoView({behavior:'smooth',block:'start'});
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let catalogItems=[],catalogEntities={};
+let catalogItems=[],catalogEntities={},catalogQuery="",catalogOffset=null,catalogLoading=false;
 async function wikiAPI(host,params){let url=new URL('https://'+host+'/w/api.php');Object.entries({...params,format:'json',origin:'*'}).forEach(([k,v])=>url.searchParams.set(k,String(v)));let ctrl=new AbortController(),clock=setTimeout(()=>ctrl.abort(),13000);try{const r=await fetch(url,{signal:ctrl.signal});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(clock)}}
-document.getElementById('catalogform').addEventListener('submit',async e=>{
-e.preventDefault();const q=document.getElementById('catalogquery').value.trim();if(q.length<2)return;
-const out=document.getElementById('catalogresults');document.getElementById('catalogdetail').classList.add('hide');out.classList.remove('hide');out.innerHTML='<div class="empty">Cerco film e serie…</div>';
-try{
- const d=await wikiAPI('www.wikidata.org',{action:'wbsearchentities',search:q,language:'it',uselang:'it',type:'item',limit:30});
- const candidates=(d.search||[]).filter(x=>/^Q\d+$/.test(x.id));
- if(!candidates.length){out.innerHTML='<div class="empty">Nessun titolo trovato.</div>';return}
- const full=await wikiAPI('www.wikidata.org',{action:'wbgetentities',ids:candidates.map(x=>x.id).join('|'),props:'claims|sitelinks',sitefilter:'itwiki',languages:'it'});
- catalogEntities=full.entities||{};
- const filmWords=/film|serie televisiva|programma televisivo|telefilm|miniserie|television|movie|sitcom|documentario|animazione|drama|show|cinema|commedia|thriller|horror/i;
- const filmTypes=new Set(['Q11424','Q5398426','Q15416','Q506240','Q24856','Q21191270','Q3464665','Q1259759','Q1261214']);
- catalogItems=candidates.filter(x=>{let entity=catalogEntities[x.id];let types=(entity?.claims?.P31||[]).map(z=>z?.mainsnak?.datavalue?.value?.id);return types.some(v=>filmTypes.has(v))||filmWords.test(x.description||'')}).slice(0,14);
- if(!catalogItems.length){out.innerHTML='<div class="empty">Nessun film o programma identificato. Prova il titolo originale.</div>';return}
- out.innerHTML='<p class="muted" style="font-size:13px">Seleziona un titolo per leggere la scheda in italiano.</p>'+catalogItems.map(x=>'<article class="catalogentry"><button type="button" data-item="'+esc(x.id)+'"><h3>'+esc(x.label)+'</h3><p>'+esc(x.description||'Apri la scheda')+'</p><span class="tag">Scheda MOVI →</span></button></article>').join('');
-}catch(err){out.innerHTML='<div class="empty">Ricerca non disponibile. Riprova con connessione attiva.</div>'}
-});
+async function searchWorldCatalog(reset=true){
+ const q=document.getElementById('catalogquery').value.trim();if(q.length<2||catalogLoading)return;
+ const out=document.getElementById('catalogresults'),more=document.getElementById('catalogmore');
+ if(reset){catalogQuery=q;catalogItems=[];catalogOffset=null;catalogEntities={};out.innerHTML='<div class="empty">Ricerca nel catalogo mondiale…</div>';}
+ if(q!==catalogQuery)return;
+ catalogLoading=true;more.classList.add('hide');more.disabled=true;
+ document.getElementById('catalogdetail').classList.add('hide');out.classList.remove('hide');
+ try{
+   const params={action:'wbsearchentities',search:q,language:'it',uselang:'it',type:'item',limit:50};
+   if(catalogOffset!==null)params.continue=catalogOffset;
+   const d=await wikiAPI('www.wikidata.org',params);
+   const candidates=(d.search||[]).filter(x=>/^Q\\d+$/.test(x.id));
+   const filtered=candidates.filter(x=>!catalogItems.some(v=>v.id===x.id));
+   if(filtered.length){
+     const entityList=await wikiAPI('www.wikidata.org',{action:'wbgetentities',ids:filtered.map(x=>x.id).join('|'),props:'claims|sitelinks',sitefilter:'itwiki'});
+     Object.assign(catalogEntities,entityList.entities||{});
+   }
+   const filmTypes=new Set(['Q11424','Q5398426','Q15416','Q506240','Q24856','Q21191270','Q3464665','Q1259759','Q1261214']);
+   const word=/film|serie televisiva|programma televisivo|telefilm|miniserie|television|movie|sitcom|documentario|animazione|drama|show|cinema|commedia|thriller|horror/i;
+   const hits=filtered.filter(x=>(catalogEntities[x.id]?.claims?.P31||[]).some(z=>filmTypes.has(z?.mainsnak?.datavalue?.value?.id))||word.test(x.description||''));
+   catalogItems.push(...hits);
+   catalogOffset=typeof d['search-continue']==='number'?d['search-continue']:null;
+   out.innerHTML=catalogItems.length?'<p class="muted" style="font-size:13px">'+catalogItems.length+' titoli trovati · archivio mondiale aperto</p>'+catalogItems.map(x=>'<article class="catalogentry"><button type="button" data-item="'+esc(x.id)+'"><h3>'+esc(x.label)+'</h3><p>'+esc(x.description||'Apri la scheda')+'</p><span class="tag">Scheda MOVI →</span></button></article>').join(''):'<div class="empty">Nessun film identificato con questo nome. Prova il titolo originale.</div>';
+   if(catalogOffset!==null)more.classList.remove('hide');
+ }catch(err){if(!catalogItems.length)out.innerHTML='<div class="empty">Ricerca temporaneamente non disponibile. Riprova.</div>';else more.classList.remove('hide');}
+ finally{catalogLoading=false;more.disabled=false}
+}
+document.getElementById('catalogform').addEventListener('submit',e=>{e.preventDefault();searchWorldCatalog(true)});
+document.getElementById('catalogmore').addEventListener('click',()=>searchWorldCatalog(false));
 document.getElementById('catalogresults').addEventListener('click',e=>{const b=e.target.closest('[data-item]');if(b)showCatalogDetail(b.dataset.item)});
 document.getElementById('catalogdetail').addEventListener('click',e=>{
  if(e.target.closest('[data-back]')){document.getElementById('catalogdetail').classList.add('hide');document.getElementById('catalogresults').classList.remove('hide')}
