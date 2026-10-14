@@ -120,7 +120,7 @@ async function shareVoteLink(){
 document.getElementById('shareVotes').addEventListener('click',shareVoteLink);
 const voteQuery=new URLSearchParams(location.search);
 const incomingTitles=(voteQuery.get('titles')||'').split('.').map(Number);
-if(validIds(incomingTitles)){voteIds=incomingTitles;selectionLocked=true;voteOwn={};try{const stored=JSON.parse(localStorage.getItem('movi-together-votes')||'{}');voteOwn=stored}catch(e){}}
+if(validIds(incomingTitles)){voteIds=incomingTitles;selectionLocked=true;voteOwn={};if(voteQuery.has('votereply')){try{const stored=JSON.parse(localStorage.getItem('movi-together-votes')||'{}');voteOwn=stored}catch(e){}}}
 const incomingVote=decodeVotes(voteQuery.get('voteinvite')||voteQuery.get('votereply'));
 if(incomingVote){voteRemote=incomingVote;document.querySelectorAll('section').forEach(x=>x.classList.add('hide'));document.getElementById('couple').classList.remove('hide');document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab==='couple'));document.getElementById('voteMessage').textContent=voteQuery.has('votereply')?'Hai ricevuto i voti dell’altra persona. Seleziona anche i tuoi per vedere i match.':'Invito ai voti ricevuto! Seleziona le tue preferenze e condividi la risposta.'}
 voteRender();
