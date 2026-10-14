@@ -29,14 +29,58 @@ const films=[
 ['MasterChef','programma',60,['tensione','divertimento'],2011,'Creatività e sfide ai fornelli.','👨‍🍳'],
 ['Italia’s Got Talent','programma',90,['divertimento','emozione'],2009,'Performance sorprendenti e momenti emozionanti.','🎤'],
 ['Bake Off Italia','programma',65,['relax','divertimento'],2013,'Dolci, creatività e sfide leggere.','🧁']
+,
+["Interstellar","film",169,["emozione","tensione"],2014,"Fantascienza tra spazio, tempo e sentimenti.","🚀"],
+["Inception","film",148,["tensione","emozione"],2010,"Un viaggio spettacolare tra sogni e realtà.","🌀"],
+["The Martian","film",144,["divertimento","tensione"],2015,"Sopravvivere su Marte con ingegno e ironia.","🪐"],
+["Coco","film",105,["emozione","divertimento"],2017,"Un'avventura musicale sui ricordi e la famiglia.","🎸"],
+["Up","film",96,["emozione","divertimento"],2009,"Un'avventura commovente tra cielo e amicizia.","🎈"],
+["WALL-E","film",98,["emozione","relax"],2008,"Una tenera avventura robotica.","🤖"],
+["Encanto","film",102,["divertimento","emozione"],2021,"Una famiglia magica e un segreto da scoprire.","🏡"],
+["The Intern","film",121,["relax","divertimento"],2015,"Commedia delicata su amicizia e lavoro.","💼"],
+["The Devil Wears Prada","film",109,["divertimento","emozione"],2006,"Ironia e stile nel mondo della moda.","👠"],
+["Mamma Mia!","film",108,["divertimento","relax"],2008,"Musica e amore sotto il sole greco.","🎤"],
+["Notting Hill","film",124,["emozione","relax"],1999,"Commedia romantica dal fascino britannico.","💕"],
+["The Holiday","film",136,["emozione","relax"],2006,"Nuovi inizi, incontri e romanticismo.","🏠"],
+["The Proposal","film",108,["divertimento","emozione"],2009,"Commedia romantica ricca di equivoci.","💍"],
+["Jumanji: Welcome to the Jungle","film",119,["divertimento","tensione"],2017,"Un gioco diventa una folle avventura.","🎮"],
+["Free Guy","film",115,["divertimento","tensione"],2021,"Un personaggio virtuale cambia il gioco.","🕹️"],
+["The Greatest Showman","film",105,["emozione","divertimento"],2017,"Musica e sogni sotto il tendone.","🎪"],
+["The Pursuit of Happyness","film",117,["emozione"],2006,"Una storia di resilienza e speranza.","🌅"],
+["The Shawshank Redemption","film",142,["emozione","tensione"],1994,"Una storia di amicizia e libertà.","🔑"],
+["The Prestige","film",130,["tensione","emozione"],2006,"La rivalità tra due illusionisti.","🎩"],
+["Shutter Island","film",138,["tensione"],2010,"Un mistero inquietante su un'isola.","🏝️"],
+["The Conjuring","film",112,["tensione"],2013,"Un horror paranormale molto intenso.","👻"],
+["The Others","film",104,["tensione"],2001,"Atmosfere gotiche e suspense.","🕯️"],
+["Scream","film",111,["tensione"],1996,"Un thriller horror pieno di colpi di scena.","🔪"],
+["Coraline","film",100,["tensione","emozione"],2009,"Una fiaba oscura e sorprendente.","🗝️"],
+["Zootopia","film",108,["divertimento","emozione"],2016,"Misteri e amicizia in una città animale.","🦊"],
+["Luca","film",95,["relax","emozione"],2021,"Un'estate di amicizia sulla Riviera.","🌊"],
+["The Secret Life of Walter Mitty","film",114,["relax","emozione"],2013,"Viaggi e coraggio di cambiare.","🌍"],
+["Chef","film",114,["relax","divertimento"],2014,"Cucina e nuovi inizi lungo la strada.","🍔"],
+["About Time","film",123,["emozione","divertimento"],2013,"Amore, famiglia e piccoli momenti.","⌛"],
+["The Intouchables","film",112,["divertimento","emozione"],2011,"Un'amicizia improbabile e speciale.","🤝"],
+["Ted Lasso","serie",34,["divertimento","emozione"],2020,"Una commedia ottimista sul lavoro di squadra.","⚽"],
+["Only Murders in the Building","serie",35,["divertimento","tensione"],2021,"Tre vicini indagano con ironia.","🔍"],
+["Wednesday","serie",50,["tensione","divertimento"],2022,"Misteri e humour oscuro a scuola.","🖤"],
+["The Office","serie",23,["divertimento","relax"],2005,"Una commedia corale in ufficio.","📎"],
+["Friends","serie",23,["divertimento","relax"],1994,"Sei amici e mille situazioni.","☕"],
+["Severance","serie",50,["tensione","emozione"],2022,"Un inquietante esperimento sul lavoro.","🧩"],
+["Dark","serie",55,["tensione","emozione"],2017,"Misteri familiari e tempo intrecciato.","⏳"],
+["The Last of Us","serie",55,["tensione","emozione"],2023,"Un viaggio di sopravvivenza e legami.","🍄"],
+["The Queen's Gambit","serie",55,["emozione","tensione"],2020,"Una giovane promessa degli scacchi.","♟️"],
+["Bridgerton","serie",60,["emozione","relax"],2020,"Passioni e intrighi in costume.","🌸"],
+["Lupin","serie",45,["tensione","divertimento"],2021,"Un ladro gentiluomo tra enigmi e travestimenti.","🎭"],
+["The Mandalorian","serie",40,["tensione","emozione"],2019,"Un'avventura spaziale tra missioni e affetti.","🌌"],
+["Bluey","serie",7,["relax","divertimento"],2018,"Episodi brevi e divertenti per tutta la famiglia.","🐶"]
 ].map((a,i)=>({id:i,title:a[0],type:a[1],duration:a[2],moods:a[3],year:a[4],desc:a[5],emoji:a[6]}));
 const moods=[['divertimento','😄','Ridermela'],['tensione','😱','Adrenalina'],['emozione','🥹','Emozionarmi'],['relax','😌','Rilassarmi']],types=[['tutti','🎞','Tutto'],['film','🎬','Film'],['serie','📺','Serie'],['programma','🎤','Programmi']],times=[['45','⏱','45 min'],['90','⌛','90 min'],['120','🍿','2 ore'],['999','🌙','Senza limiti']];
-const key='movi-local-v01'; let state;try{state=JSON.parse(localStorage.getItem(key))||{}}catch(e){state={}};state={mood:'divertimento',type:'tutti',time:'120',mood1:'divertimento',mood2:'relax',saved:[],seen:[],...state};const persist=()=>localStorage.setItem(key,JSON.stringify(state));
+const key='movi-local-v01'; let state;try{state=JSON.parse(localStorage.getItem(key))||{}}catch(e){state={}};state={mood:'divertimento',type:'tutti',time:'120',mood1:'divertimento',mood2:'relax',saved:[],seen:[],liked:[],...state};const persist=()=>localStorage.setItem(key,JSON.stringify(state));
 function renderChoices(id,arr,k){document.getElementById(id).innerHTML=arr.map(([v,e,l])=>'<button class="choice '+(state[k]===v?'active':'')+'" data-choice="'+k+'" data-v="'+v+'"><b>'+e+'</b>'+l+'</button>').join('')}
 function redraw(){renderChoices('moods',moods,'mood');renderChoices('types',types,'type');renderChoices('times',times,'time');renderChoices('mood1',moods,'mood1');renderChoices('mood2',moods,'mood2')}
-document.addEventListener('click',e=>{const detail=e.target.closest('[data-movi-detail]');if(detail){openRecommendedDetail(+detail.dataset.moviDetail);return;}let c=e.target.closest('[data-choice]');if(c){state[c.dataset.choice]=c.dataset.v;persist();redraw()}let n=e.target.closest('[data-tab]');if(n){document.querySelectorAll('section').forEach(s=>s.classList.add('hide'));document.getElementById(n.dataset.tab).classList.remove('hide');document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===n));if(n.dataset.tab==='saved')displaySaved()}let save=e.target.closest('[data-save]');if(save){let id=+save.dataset.save;state.saved=state.saved.includes(id)?state.saved.filter(x=>x!==id):[...state.saved,id];persist();save.textContent=state.saved.includes(id)?'★ Salvato':'☆ Salva';if(!document.getElementById('saved').classList.contains('hide'))displaySaved()}let seen=e.target.closest('[data-seen]');if(seen){let id=+seen.dataset.seen;state.seen=[...new Set([...state.seen,id])];persist();seen.textContent='✓ Già visto'}});
-function results(list,into){document.getElementById(into).innerHTML=list.length?'<div class="step">I tuoi consigli</div>'+list.map((f,i)=>'<article class="card"><div class="filmrow"><div class="poster" style="background:linear-gradient(140deg,hsl('+(f.id*36+240)+',55%,38%),#171025)">'+f.emoji+'</div><div><div class="tag">'+(i===0?'✦ Scelta MOVI':'Alternativa '+i)+'</div><h3>'+f.title+'</h3><div class="detail">'+f.year+' · '+f.type+' · '+f.duration+' min<br>'+f.desc+'</div></div></div><button class="smallbtn" data-save="'+f.id+'">'+(state.saved.includes(f.id)?'★ Salvato':'☆ Salva')+'</button><button class="smallbtn" data-movi-detail="'+f.id+'">ℹ Scheda e video</button><button class="smallbtn" data-seen="'+f.id+'">'+(state.seen.includes(f.id)?'✓ Già visto':'✓ Già visto?')+'</button></article>').join(''):'<div class="empty">Nessun risultato con questi filtri. Prova una durata più lunga o un altro formato.</div>'}
-document.getElementById('choose').onclick=()=>{let matches=films.filter(f=>(state.type==='tutti'||f.type===state.type)&&f.duration<=+state.time&&!state.seen.includes(f.id)).sort((a,b)=>Number(b.moods.includes(state.mood))-Number(a.moods.includes(state.mood))||a.duration-b.duration);results(matches.slice(0,3),'results');document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'})};
+document.addEventListener('click',e=>{const detail=e.target.closest('[data-movi-detail]');if(detail){openRecommendedDetail(+detail.dataset.moviDetail);return;}let c=e.target.closest('[data-choice]');if(c){state[c.dataset.choice]=c.dataset.v;persist();redraw()}let n=e.target.closest('[data-tab]');if(n){document.querySelectorAll('section').forEach(s=>s.classList.add('hide'));document.getElementById(n.dataset.tab).classList.remove('hide');document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===n));if(n.dataset.tab==='saved')displaySaved()}let save=e.target.closest('[data-save]');if(save){let id=+save.dataset.save;state.saved=state.saved.includes(id)?state.saved.filter(x=>x!==id):[...state.saved,id];persist();save.textContent=state.saved.includes(id)?'★ Salvato':'☆ Salva';if(!document.getElementById('saved').classList.contains('hide'))displaySaved()}let liked=e.target.closest('[data-like]');if(liked){let id=+liked.dataset.like;state.liked=state.liked.includes(id)?state.liked.filter(v=>v!==id):[...state.liked,id];persist();liked.textContent=state.liked.includes(id)?'♥ Ti piace':'♡ Mi piace'}let seen=e.target.closest('[data-seen]');if(seen){let id=+seen.dataset.seen;state.seen=[...new Set([...state.seen,id])];persist();seen.textContent='✓ Già visto'}});
+function scoreFilm(f,mood){let score=f.moods.includes(mood)?5:0;for(const id of state.liked){let liked=films.find(x=>x.id===id);if(liked&&liked.moods.some(tag=>f.moods.includes(tag)))score+=1.25;}if(state.saved.includes(f.id))score+=.4;return score;}function results(list,into){document.getElementById(into).innerHTML=list.length?'<div class="step">I tuoi consigli · preferenze personalizzate</div>'+list.map((f,i)=>'<article class="card"><div class="filmrow"><div class="poster" style="background:linear-gradient(140deg,hsl('+(f.id*36+240)+',55%,38%),#171025)">'+f.emoji+'</div><div><div class="tag">'+(i===0?'✦ Scelta MOVI':'Alternativa '+i)+'</div><h3>'+f.title+'</h3><div class="detail">'+f.year+' · '+f.type+' · '+f.duration+' min<br>'+f.desc+'</div></div></div><button class="smallbtn" data-save="'+f.id+'">'+(state.saved.includes(f.id)?'★ Salvato':'☆ Salva')+'</button><button class="smallbtn" data-like="'+f.id+'">'+(state.liked.includes(f.id)?'♥ Ti piace':'♡ Mi piace')+'</button><button class="smallbtn" data-movi-detail="'+f.id+'">ℹ Scheda e video</button><button class="smallbtn" data-seen="'+f.id+'">'+(state.seen.includes(f.id)?'✓ Già visto':'✓ Già visto?')+'</button></article>').join(''):'<div class="empty">Nessun risultato con questi filtri. Prova una durata più lunga o un altro formato.</div>'}
+document.getElementById('choose').onclick=()=>{let matches=films.filter(f=>(state.type==='tutti'||f.type===state.type)&&f.duration<=+state.time&&!state.seen.includes(f.id)).sort((a,b)=>scoreFilm(b,state.mood)-scoreFilm(a,state.mood)||a.duration-b.duration);results(matches.slice(0,5),'results');document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'})};
 document.getElementById('match').onclick=()=>{let matches=films.filter(f=>!state.seen.includes(f.id)).sort((a,b)=>(Number(b.moods.includes(state.mood1))+Number(b.moods.includes(state.mood2)))-(Number(a.moods.includes(state.mood1))+Number(a.moods.includes(state.mood2)))||a.duration-b.duration);results(matches.slice(0,3),'coupleresults')};
 function displaySaved(){results(films.filter(f=>state.saved.includes(f.id)),'savedresults')}redraw();if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
