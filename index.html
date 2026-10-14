@@ -80,11 +80,44 @@ function renderChoices(id,arr,k){document.getElementById(id).innerHTML=arr.map((
 function redraw(){renderChoices('moods',moods,'mood');renderChoices('types',types,'type');renderChoices('times',times,'time');renderChoices('mood1',moods,'mood1');renderChoices('mood2',moods,'mood2')}
 document.addEventListener('click',e=>{const detail=e.target.closest('[data-movi-detail]');if(detail){openRecommendedDetail(+detail.dataset.moviDetail);return;}let c=e.target.closest('[data-choice]');if(c){state[c.dataset.choice]=c.dataset.v;persist();redraw()}let n=e.target.closest('[data-tab]');if(n){document.querySelectorAll('section').forEach(s=>s.classList.add('hide'));document.getElementById(n.dataset.tab).classList.remove('hide');document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===n));if(n.dataset.tab==='saved')displaySaved()}let save=e.target.closest('[data-save]');if(save){let id=+save.dataset.save;state.saved=state.saved.includes(id)?state.saved.filter(x=>x!==id):[...state.saved,id];persist();save.textContent=state.saved.includes(id)?'★ Salvato':'☆ Salva';if(!document.getElementById('saved').classList.contains('hide'))displaySaved()}let liked=e.target.closest('[data-like]');if(liked){let id=+liked.dataset.like;state.liked=state.liked.includes(id)?state.liked.filter(v=>v!==id):[...state.liked,id];persist();liked.textContent=state.liked.includes(id)?'♥ Ti piace':'♡ Mi piace'}let seen=e.target.closest('[data-seen]');if(seen){let id=+seen.dataset.seen;state.seen=[...new Set([...state.seen,id])];persist();seen.textContent='✓ Già visto'}});
 function scoreFilm(f,mood){let score=f.moods.includes(mood)?5:0;for(const id of state.liked){let liked=films.find(x=>x.id===id);if(liked&&liked.moods.some(tag=>f.moods.includes(tag)))score+=1.25;}if(state.saved.includes(f.id))score+=.4;return score;}function results(list,into){document.getElementById(into).innerHTML=list.length?'<div class="step">I tuoi consigli · preferenze personalizzate</div>'+list.map((f,i)=>'<article class="card"><div class="filmrow"><div class="poster" style="background:linear-gradient(140deg,hsl('+(f.id*36+240)+',55%,38%),#171025)">'+f.emoji+'</div><div><div class="tag">'+(i===0?'✦ Scelta MOVI':'Alternativa '+i)+'</div><h3>'+f.title+'</h3><div class="detail">'+f.year+' · '+f.type+' · '+f.duration+' min<br>'+f.desc+'</div></div></div><button class="smallbtn" data-save="'+f.id+'">'+(state.saved.includes(f.id)?'★ Salvato':'☆ Salva')+'</button><button class="smallbtn" data-like="'+f.id+'">'+(state.liked.includes(f.id)?'♥ Ti piace':'♡ Mi piace')+'</button><button class="smallbtn" data-movi-detail="'+f.id+'">ℹ Scheda e video</button><button class="smallbtn" data-seen="'+f.id+'">'+(state.seen.includes(f.id)?'✓ Già visto':'✓ Già visto?')+'</button></article>').join(''):'<div class="empty">Nessun risultato con questi filtri. Prova una durata più lunga o un altro formato.</div>'}
-document.getElementById('choose').onclick=()=>{let matches=films.filter(f=>(state.type==='tutti'||f.type===state.type)&&f.duration<=+state.time&&!state.seen.includes(f.id)).sort((a,b)=>scoreFilm(b,state.mood)-scoreFilm(a,state.mood)||a.duration-b.duration);results(matches.slice(0,5),'results');document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'})};
+document.getElementById('choose').onclick=async()=>{let matches=films.filter(f=>(state.type==='tutti'||f.type===state.type)&&f.duration<=+state.time&&!state.seen.includes(f.id)).sort((a,b)=>scoreFilm(b,state.mood)-scoreFilm(a,state.mood)||a.duration-b.duration);results(matches.slice(0,5),'results');await discoverOnlineMatches();document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'})};
 document.getElementById('match').onclick=()=>{let matches=films.filter(f=>!state.seen.includes(f.id)).sort((a,b)=>(Number(b.moods.includes(state.mood1))+Number(b.moods.includes(state.mood2)))-(Number(a.moods.includes(state.mood1))+Number(a.moods.includes(state.mood2)))||a.duration-b.duration);results(matches.slice(0,3),'coupleresults')};
 function displaySaved(){results(films.filter(f=>state.saved.includes(f.id)),'savedresults')}redraw();if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 
+
+
+const moodKeywords={divertimento:['commedia cinematografica','film comico'],tensione:['film thriller','film horror'],emozione:['film drammatico','film romantico'],relax:['film animazione','film commedia']};
+let onlineSuggestionItems=[],onlineSuggestionEntities={};
+async function discoverOnlineMatches(){
+ const dest=document.getElementById('results');
+ let section=document.getElementById('worlddiscover');
+ if(!section){section=document.createElement('div');section.id='worlddiscover';dest.appendChild(section)}
+ section.innerHTML='<div class="step">Esplora oltre i titoli selezionati</div><p class="muted">Carico alcune proposte dal catalogo mondiale…</p>';
+ const terms=moodKeywords[state.mood]||moodKeywords.relax;
+ try{
+   const responses=await Promise.allSettled(terms.map(term=>wikiAPI('www.wikidata.org',{action:'wbsearchentities',search:term,language:'it',uselang:'it',type:'item',limit:25})));
+   const entries=responses.filter(r=>r.status==='fulfilled').flatMap(r=>r.value.search||[]);
+   const unique=[...new Map(entries.filter(x=>/^Q[0-9]+$/.test(x.id)).map(x=>[x.id,x])).values()];
+   const classes=/film|movie|cinema|television|serie|documentario|commedia|dramma|thriller|horror|animazione|sitcom/i;
+   const candidates=unique.filter(x=>classes.test(x.description||'')&&x.label&&x.label.length<90).slice(0,12);
+   if(!candidates.length){section.innerHTML='<div class="card"><p class="muted">Nessuna proposta online attendibile per questa ricerca. I suggerimenti selezionati restano disponibili.</p></div>';return}
+   const data=await wikiAPI('www.wikidata.org',{action:'wbgetentities',ids:candidates.map(x=>x.id).join('|'),props:'claims|sitelinks',sitefilter:'itwiki'});
+   onlineSuggestionEntities=data.entities||{};
+   onlineSuggestionItems=candidates.filter(x=>onlineSuggestionEntities[x.id]);
+   section.innerHTML='<div class="step">Da esplorare nel catalogo mondiale</div><p class="note">Titoli trovati tramite ricerca testuale, non ancora valutati dal motore di preferenze. Durata e piattaforme non verificate.</p>'+onlineSuggestionItems.map(x=>'<article class="catalogentry"><button type="button" data-online="'+esc(x.id)+'"><h3>'+esc(x.label)+'</h3><p>'+esc(x.description||'Scheda online disponibile')+'</p><span class="tag">Scheda in italiano →</span></button></article>').join('');
+ }catch(error){section.innerHTML='<p class="note">Catalogo esterno temporaneamente non disponibile. I consigli selezionati continuano a funzionare.</p>'}
+}
+document.getElementById('results').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-online]');if(!btn)return;
+ const id=btn.dataset.online,item=onlineSuggestionItems.find(x=>x.id===id);
+ if(!item||!onlineSuggestionEntities[id])return;
+ catalogItems=[item];catalogEntities={[id]:onlineSuggestionEntities[id]};
+ document.querySelectorAll('section').forEach(x=>x.classList.add('hide'));
+ document.getElementById('catalog').classList.remove('hide');
+ document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab==='catalog'));
+ showCatalogDetail(id);
+});
 
 const linkedTitleCache=new Map();
 async function openRecommendedDetail(id){
