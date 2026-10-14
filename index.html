@@ -194,16 +194,24 @@ document.getElementById('catalogdetail').addEventListener('click',e=>{
 function commonsPoster(entity){const value=(entity?.claims?.P18||[])[0]?.mainsnak?.datavalue?.value;if(typeof value!=='string'||!value||value.length>220)return null;const normalized=value.replace(/ /g,'_');const encoded=encodeURIComponent(normalized).replace(/%2F/gi,'/');return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/'+encoded+'?width=320';}
 async function showCatalogDetail(id){
  const item=catalogItems.find(x=>x.id===id),entity=catalogEntities[id];if(!item||!entity)return;
- const out=document.getElementById('catalogdetail');document.getElementById('catalogresults').classList.add('hide');out.classList.remove('hide');
- out.innerHTML='<button class="detailBack" data-back>← Torna ai risultati</button><h2>'+esc(item.label)+'</h2><p class="muted">Carico la descrizione in italiano…</p>';
+ const out=document.getElementById('catalogdetail');
+ document.getElementById('catalogresults').classList.add('hide');out.classList.remove('hide');
+ out.innerHTML='<button class="detailBack" data-back>← Torna ai risultati</button><h2>'+esc(item.label)+'</h2><p class="muted">Caricamento scheda italiana…</p>';
  let description=item.description||'Descrizione non disponibile in italiano.';
- let wikiTitle=entity.sitelinks?.itwiki?.title;
- if(wikiTitle){try{const d=await wikiAPI('it.wikipedia.org',{action:'query',prop:'extracts',exintro:1,explaintext:1,exchars:1100,titles:wikiTitle});let pg=Object.values(d.query?.pages||{})[0];if(pg?.extract)description=pg.extract}catch(err){}}
- if(!document.getElementById('catalogdetail').classList.contains('hide')) {
- const videoClaims=(entity.claims?.P1651||[]).map(c=>({id:c?.mainsnak?.datavalue?.value,role:(c.qualifiers?.P3831||[]).map(v=>v?.datavalue?.value?.id)})).filter(x=>typeof x.id==='string'&&/^[a-zA-Z0-9_-]{11}$/.test(x.id));
- const trailer=videoClaims.find(x=>x.role.includes('Q622550'));
- const tagged=trailer||videoClaims[0];const trailerLabel=trailer?'▶ Guarda trailer':'▶ Guarda video collegato';
- const poster=commonsPoster(entity);const image=poster?'<img class="posterHero" src="'+esc(poster)+'" alt="Immagine collegata a '+esc(item.label)+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">':'';out.innerHTML='<button class="detailBack" data-back>← Torna ai risultati</button><h2>'+esc(item.label)+'</h2>'+image+'<p class="muted">'+esc(description)+'</p>'+(tagged?'<div id="movieVideo"><button class="trailerBtn" data-play="'+esc(tagged.id)+'">'+trailerLabel+'</button></div>':'<div class="card"><span class="note">Trailer non disponibile nei dati autorizzati per questo titolo.</span></div>')+'<p class="note">Disponibilità streaming: non ancora integrata. Fonte: Wikidata'+(wikiTitle?' e Wikipedia in italiano':'')+'. Non è una piattaforma di streaming.</p>';
- }
+ const wikiTitle=entity.sitelinks?.itwiki?.title;
+ let poster=commonsPoster(entity),imageSource='Wikimedia Commons';
+ if(wikiTitle){try{
+   const data=await wikiAPI('it.wikipedia.org',{action:'query',prop:'extracts|pageimages',exintro:1,explaintext:1,exchars:1300,pithumbsize:500,titles:wikiTitle});
+   const pg=Object.values(data.query?.pages||{})[0];
+   if(pg?.extract)description=pg.extract;
+   if(pg?.thumbnail?.source&&/^https:\/\//.test(pg.thumbnail.source)){poster=pg.thumbnail.source;imageSource='Wikipedia in italiano'}
+ }catch(err){}}
+ const year=worldMetadata(item).year;
+ const claims=entity.claims||{};
+ const youtube=(claims.P1651||[]).map(c=>({id:c?.mainsnak?.datavalue?.value,roles:(c.qualifiers?.P3831||[]).map(v=>v?.datavalue?.value?.id)})).filter(v=>typeof v.id==='string'&&/^[a-zA-Z0-9_-]{11}$/.test(v.id));
+ const trailer=youtube.find(x=>x.roles.includes('Q622550')),video=trailer||youtube[0];
+ const image=poster?'<img class="posterHero" src="'+esc(poster)+'" alt="Immagine di '+esc(item.label)+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">':'<div class="card"><span class="note">Immagine non disponibile nelle fonti.</span></div>';
+ if(out.classList.contains('hide'))return;
+ out.innerHTML='<button class="detailBack" data-back>← Torna ai risultati</button><h2>'+esc(item.label)+'</h2>'+(year?'<p class="tag">'+year+'</p>':'')+image+'<p class="muted">'+esc(description)+'</p>'+(video?'<div id="movieVideo"><button class="trailerBtn" data-play="'+esc(video.id)+'">▶ '+(trailer?'Guarda trailer':'Guarda video collegato')+'</button></div>':'<div class="card"><span class="note">Nessun trailer verificato disponibile per questo titolo.</span></div>')+'<p class="note">Immagini: '+esc(poster?imageSource:'non disponibili')+'. Testo: '+(wikiTitle?'Wikipedia in italiano':'Wikidata')+'. Disponibilità streaming non ancora integrata.</p>';
 }
 </script></body></html>
