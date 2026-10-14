@@ -97,24 +97,36 @@ function displaySaved(){results(films.filter(f=>state.saved.includes(f.id)),'sav
 
 const moodKeywords={divertimento:['commedia cinematografica','film comico'],tensione:['film thriller','film horror'],emozione:['film drammatico','film romantico'],relax:['film animazione','film commedia']};
 let onlineSuggestionItems=[],onlineSuggestionEntities={};
+let onlineRequest=0;
 async function discoverOnlineMatches(){
- const dest=document.getElementById('results');
- let section=document.getElementById('worlddiscover');
+ const request=++onlineRequest;
+ const dest=document.getElementById('results');let section=document.getElementById('worlddiscover');
  if(!section){section=document.createElement('div');section.id='worlddiscover';dest.appendChild(section)}
- section.innerHTML='<div class="step">Esplora oltre i titoli selezionati</div><p class="muted">Carico alcune proposte dal catalogo mondiale…</p>';
- const terms=moodKeywords[state.mood]||moodKeywords.relax;
+ section.innerHTML='<div class="step">Scoperta online personalizzata</div><p class="muted">Cerco altri titoli compatibili con i tuoi gusti…</p>';
+ const interests={divertimento:['commedia','film comico'],tensione:['thriller','film horror'],emozione:['film drammatico','film romantico'],relax:['film animazione','commedia']};
+ const liked=state.liked.map(id=>films.find(f=>f.id===id)).filter(Boolean);
+ const tags=[...new Set(liked.flatMap(f=>f.moods))];
+ const terms=[...(interests[state.mood]||interests.relax),...tags.filter(t=>t!==state.mood).slice(0,2).map(t=>(interests[t]||[])[0]).filter(Boolean)];
  try{
-   const responses=await Promise.allSettled(terms.map(term=>wikiAPI('www.wikidata.org',{action:'wbsearchentities',search:term,language:'it',uselang:'it',type:'item',limit:25})));
-   const entries=responses.filter(r=>r.status==='fulfilled').flatMap(r=>r.value.search||[]);
-   const unique=[...new Map(entries.filter(x=>/^Q[0-9]+$/.test(x.id)).map(x=>[x.id,x])).values()];
-   const classes=/film|movie|cinema|television|serie|documentario|commedia|dramma|thriller|horror|animazione|sitcom/i;
-   const candidates=unique.filter(x=>classes.test(x.description||'')&&x.label&&x.label.length<90).slice(0,12);
-   if(!candidates.length){section.innerHTML='<div class="card"><p class="muted">Nessuna proposta online attendibile per questa ricerca. I suggerimenti selezionati restano disponibili.</p></div>';return}
-   const data=await wikiAPI('www.wikidata.org',{action:'wbgetentities',ids:candidates.map(x=>x.id).join('|'),props:'claims|sitelinks',sitefilter:'itwiki'});
-   onlineSuggestionEntities=data.entities||{};
-   onlineSuggestionItems=candidates.filter(x=>onlineSuggestionEntities[x.id]);
-   section.innerHTML='<div class="step">Da esplorare nel catalogo mondiale</div><p class="note">Titoli trovati tramite ricerca testuale, non ancora valutati dal motore di preferenze. Durata e piattaforme non verificate.</p>'+onlineSuggestionItems.map(x=>'<article class="catalogentry"><button type="button" data-online="'+esc(x.id)+'"><h3>'+esc(x.label)+'</h3><p>'+esc(x.description||'Scheda online disponibile')+'</p><span class="tag">Scheda in italiano →</span></button></article>').join('');
- }catch(error){section.innerHTML='<p class="note">Catalogo esterno temporaneamente non disponibile. I consigli selezionati continuano a funzionare.</p>'}
+  const replies=await Promise.allSettled([...new Set(terms)].map(term=>wikiAPI('www.wikidata.org',{action:'wbsearchentities',search:term,language:'it',uselang:'it',type:'item',limit:40})));
+  if(request!==onlineRequest)return;
+  const entries=replies.filter(r=>r.status==='fulfilled').flatMap(r=>r.value.search||[]);
+  const unique=[...new Map(entries.filter(x=>/^Q[0-9]+$/.test(x.id)).map(x=>[x.id,x])).values()];
+  const classes=/film|movie|cinema|television|serie|documentario|commedia|dramma|thriller|horror|animazione|sitcom/i;
+  const candidates=unique.filter(x=>classes.test(x.description||'')&&x.label&&x.label.length<90).slice(0,40);
+  if(!candidates.length){section.innerHTML='<div class="card"><p class="muted">Nessun risultato online affidabile. I consigli selezionati restano disponibili.</p></div>';return}
+  const data=await wikiAPI('www.wikidata.org',{action:'wbgetentities',ids:candidates.map(x=>x.id).join('|'),props:'claims|sitelinks',sitefilter:'itwiki'});
+  if(request!==onlineRequest)return;
+  const entities=data.entities||{};
+  const filmTypes=new Set(['Q11424','Q5398426','Q15416','Q506240','Q24856','Q21191270','Q3464665','Q1259759','Q1261214']);
+  const typeMap=e=>(e?.claims?.P31||[]).map(c=>c?.mainsnak?.datavalue?.value?.id);
+  let relevant=candidates.filter(x=>entities[x.id]&&(typeMap(entities[x.id]).some(t=>filmTypes.has(t))||classes.test(x.description||'')));
+  if(state.type!=='tutti')relevant=relevant.filter(x=>{const d=(x.description||'').toLowerCase();return state.type==='serie'?/serie|television|sitcom|miniserie/.test(d):state.type==='film'?/film|movie|cinema|documentario|animazione/.test(d):/programma|television|show/.test(d)});
+  const hints={divertimento:/commedia|comico|comedy|sitcom/i,tensione:/thriller|horror|giallo|poliziesc|crime/i,emozione:/dramma|drammatic|romantic|sentimental/i,relax:/animazione|famiglia|commedia|animation/i};
+  relevant.sort((a,b)=>Number(hints[state.mood]?.test(b.description||''))-Number(hints[state.mood]?.test(a.description||''))||Number(Boolean(entities[b.id]?.sitelinks?.itwiki))-Number(Boolean(entities[a.id]?.sitelinks?.itwiki)));
+  onlineSuggestionItems=relevant.slice(0,12);onlineSuggestionEntities=entities;
+  section.innerHTML='<div class="step">Altri titoli da esplorare</div><p class="note">Ordinamento indicativo basato su umore e interessi. Wikidata non garantisce durata, trailer o disponibilità: nessun filtro di tempo o servizio viene applicato ai risultati online.</p>'+(onlineSuggestionItems.length?onlineSuggestionItems.map(x=>'<article class="catalogentry"><button type="button" data-online="'+esc(x.id)+'"><h3>'+esc(x.label)+'</h3><p>'+esc(x.description||'Scheda disponibile')+'</p><span class="tag">Apri scheda italiana →</span></button></article>').join(''):'<div class="empty">Nessun titolo compatibile identificato in questa ricerca.</div>');
+ }catch(error){if(request===onlineRequest)section.innerHTML='<p class="note">La ricerca esterna non è disponibile. I consigli locali continuano a funzionare.</p>'}
 }
 document.getElementById('results').addEventListener('click',e=>{
  const btn=e.target.closest('[data-online]');if(!btn)return;
